@@ -200,6 +200,9 @@ verDatos proc
     lea DX, datosPacientes[BX+34]
     call print
     
+    call lnBr
+    call input
+    
     jmp consultar
     
     ret
@@ -291,7 +294,8 @@ eliminarDatos proc
     mov DX, offset txtEliminado
     call print
     
-    call lnBr   
+    call lnBr
+    call input   
        
     jmp eliminar
     
