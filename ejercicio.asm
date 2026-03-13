@@ -1,3 +1,4 @@
+.model medium
 .stack 100h
 .data                                           
 divisor1 db '================'
@@ -345,3 +346,5 @@ print endp
 exit proc
 .exit
 exit endp
+
+end
