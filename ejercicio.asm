@@ -19,6 +19,9 @@ txtPedirPeso   db 0dh, 0ah, 'Peso (kg): $'
 txtPedirAltura db 0dh, 0ah, 'Altura (cm): $'
 txtPedirID db 0dh, 0ah, 'ID del paciente (1, 2 o 3 & 0. Salir): $'
 txtEliminado db 0dh, 0ah, 'Se elimino con exito $'
+txtIMC db 0dh, 0ah, 'IMC: $'
+txtErrorIMC db ' N/A (Faltan datos)$'
+pesoAux dw 0
 
 ; ====================================== MEMORIA DE PACIENTES ======================================
 ; Matriz plana de 114 bytes inicializada con el caracter '$' para evitar basura en memoria.
