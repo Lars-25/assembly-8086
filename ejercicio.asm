@@ -204,11 +204,75 @@ verDatos proc
     lea DX, datosPacientes[BX+34]
     call print
     
+    ; --- CALCULO E IMPRESION DE IMC ---
+    mov DX, offset txtIMC
+    call print
+    
+    ; 1. Convertir Peso a numero entero
+    mov SI, BX
+    add SI, 30
+    call asciiAEntero       
+    mov pesoAux, AX         
+    
+    ; 2. Convertir Altura a numero entero
+    mov SI, BX
+    add SI, 34
+    call asciiAEntero       
+    
+    ; Evitar division entre cero si no hay datos guardados
+    cmp AX, 0
+    je errorIMC
+    
+    ; 3. Altura al cuadrado (CX = Altura^2)
+    mov CX, AX              
+    mul CX                  
+    mov CX, AX              
+    
+    ; 4. Peso * 10000 (Ocurre en DX:AX para evitar desbordamiento)
+    mov AX, pesoAux         
+    mov DI, 10000
+    mul DI                  
+    
+    ; 5. Division Final
+    div CX                  ; AX = IMC entero, DX = Residuo
+    
+    ; Guardar datos para calcular el decimal en el paso 6
+    push DX                 
+    push CX                 
+    
+    ; Imprimir la parte entera
+    call enteroAAscii
+    
+    ; Imprimir el punto decimal
+    mov AH, 02h
+    mov DL, '.'
+    int 21h
+    
+    ; 6. Calcular primer decimal: (Residuo * 10) / Altura^2
+    pop CX                  
+    pop AX                  ; Recupera residuo
+    
+    mov BX, 10
+    mul BX                  
+    div CX                  
+    
+    ; Imprimir el decimal convirtiendolo a ASCII
+    mov DL, AL
+    add DL, '0'             
+    mov AH, 02h
+    int 21h
+    
+    jmp finVerDatos
+    
+errorIMC:
+    mov DX, offset txtErrorIMC
+    call print
+
+finVerDatos:
     call lnBr
     call input
     
     jmp consultar
-    
     ret
 verDatos endp
 
