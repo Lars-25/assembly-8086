@@ -410,6 +410,56 @@ print proc                  ; Antes de ser llamada, se manda el offset de la cad
     ret
 print endp
 
+asciiAEntero proc
+    ; Convierte una cadena ASCII a numero entero (Retornado en AX)
+    xor AX, AX      
+    xor CX, CX      
+    mov DI, 10      
+
+cicloConvertir:
+    mov CL, datosPacientes[SI] 
+    cmp CL, '$'     
+    je finConvertir
+    cmp CL, 0Dh     
+    je finConvertir
+    cmp CL, '0'     
+    jb finConvertir
+    cmp CL, '9'
+    ja finConvertir
+
+    sub CL, '0'     ; Restamos 30h para tener el valor real numerico
+    mul DI          ; AX = AX * 10 (recorremos el numero a la izquierda)
+    add AX, CX      ; Sumamos el nuevo digito
+    inc SI          
+    jmp cicloConvertir
+
+finConvertir:
+    ret
+asciiAEntero endp
+
+enteroAAscii proc
+    ; Toma el numero en AX y lo imprime en pantalla extrayendo digitos
+    mov CX, 0       
+    mov BX, 10      
+
+cicloDividir:
+    xor DX, DX      
+    div BX          ; Dividimos AX / 10. (AX = Cociente, DX = Residuo)
+    push DX         ; Guardamos el residuo en la pila (Stack) LIFO
+    inc CX          
+    cmp AX, 0       
+    jne cicloDividir
+
+cicloImprimir:
+    pop DX          ; Sacamos los digitos en el orden correcto
+    add DL, '0'     ; Sumamos 30h para convertir de vuelta a ASCII
+    mov AH, 02h     
+    int 21h
+    loop cicloImprimir 
+
+    ret
+enteroAAscii endp
+
 exit proc
 .exit
 exit endp
