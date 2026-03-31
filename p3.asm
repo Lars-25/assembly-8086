@@ -38,7 +38,7 @@ idx dw  0000h
 
 w   equ 8 ;WIDTH
 h   equ 8 ;HEIGHT
-px  equ 8            
+px  equ 1            
 
 .code
 
@@ -97,7 +97,7 @@ proc sprite
     mov cl, ln1[si]             ; Obtener el color del pixel del arreglo
     mov clr, cl                 
     
-    draw8 clr, pxl[0], pxl[4]  
+    drawN clr, pxl[0], pxl[4], px  
     
     mov si, idx                 
     inc si                      ; Incerementar el indicador para el siguiente pixel

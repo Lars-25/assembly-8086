@@ -1,4 +1,4 @@
-macro draw8 clr, x, y
+macro drawN clr, x, y, sz
 
 mov si, 0 ;X
 mov di, 0 ;Y
@@ -11,19 +11,19 @@ mov di, 0 ;Y
         add ax, x
         mov bx, di
         add bx, y
-        draw1 clr, ax, bx
-        cmp si, 08h
+        draw clr, ax, bx
+        cmp si, sz
         je goDown
         inc si
         jmp drawlp
         
     goDown:
         inc di
-        cmp di, 08h
+        cmp di, sz
         jne resSI
 endm
 
-macro draw1 clr, x, y
+macro draw clr, x, y
 
 mov cx, x
 mov dx, y
