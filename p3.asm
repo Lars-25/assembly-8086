@@ -4,6 +4,7 @@ include p3macros.asm
 
 
 .data
+;ln1 db 12
 ;       0   1   2   3   4   5   6   7
 ln1 db  00 ,12 ,12 ,12 ,'@'
 ln2 db  12 ,12 ,11 ,11 ,'@'
@@ -43,13 +44,14 @@ tx3 dw 'y '
 dry db 01h      ; Variable del eje y
 
 
-w       equ 4           ;WIDTH
-h       equ 5           ;HEIGHT
-px      equ 1           ;PIXEL SIZE (TAMAÑO DE CADA CUADRADITO)
-scw     equ 6           ;SCREEN WIDTH
-sch     equ 7           ;SCREEN HEIGHT
-mw      equ scw-w*px    ;LIMITE DE X
-mh      equ sch-h*px    ;LIMITE DE Y
+w       equ 4                 ;WIDTH
+h       equ 5                 ;HEIGHT
+px      equ 2                 ;PIXEL SIZE (TAMAÑO DE CADA CUADRADITO)
+scw     equ 50                ;SCREEN WIDTH
+sch     equ 60                ;SCREEN HEIGHT
+mw      equ scw-w*px          ;LIMITE DE X
+mh      equ sch-h*px          ;LIMITE DE Y
+; INTERAVLOS DEL TIEMPO PARA LA ESPERA.
 frzcx   equ 00003h
 frzdx   equ 0d090h
 
@@ -69,7 +71,6 @@ proc sprite
     ; Piensa que todo esto es un ciclo infinito con
     ; un ciclo for i con un ciclo for j dentro.
     start:
-    ;call waitSc              
     ; Sirve para iniciar y reiniciar.
     mov si, 0                   ; Empezar de 0           
     mov di, 0
@@ -188,6 +189,7 @@ proc sprite
 sprite endp
 
 proc dvd
+    call waitSc
     getX: 
     mov ax, crd[0]          ;X
     jmp chkX
@@ -199,7 +201,7 @@ proc dvd
     chkX:
     ;Revisar que x no sobrepase el borde izquierdo      
     cmp ax, 0
-    jle goToLeft
+    jle goToRight
     
     ;Revisar que x no sobrepase el borde derecho
     ;Proceso: w * px + x
@@ -209,14 +211,22 @@ proc dvd
     add ax, crd[0]
     
     cmp ax, mw
-    jae goToRight
+    jae goToLeft
     jmp getY
+    
+    goToLeft:
+    mov drx, 00h
+    jmp getY
+    
+    goToRight:
+    mov drx, 01h
+    jmp getY
+
     
     chkY:
     ;Revisar que y no sobrepase el borde superior
     cmp ax, 0
     jle goToDown
-    
     
     ;Revisar que y no sobrepase el borde inferior
     ;Proceso: h * px + y
@@ -230,50 +240,40 @@ proc dvd
     
     goToUp:
     mov dry, 00h
-    jmp getY
+    jmp chgXCrds
     
     goToDown:
     mov dry, 01h
-    jmp getY
-    
-    goToLeft:
-    mov drx, 00h
-    jmp chgXCrds
-    
-    goToRight:
-    mov drx, 01h
     jmp chgXCrds
     
     chgXCrds:
     mov al, drx
     cmp al, 01h
-    jmp DOWN 
-    
-    jmp UP
-    
-    UP:
-    call mov1up
-    jmp chgYCrds
-    
-    DOWN:
-    call mov1dn
- 
-    
-    chgYCrds:
-    mov al, dry
-    cmp al, 01h
-    jmp RIGHT
+    je RIGHT 
     
     jmp LEFT
     
     LEFT:
     call mov1lf
-    jmp rtSprite
+    jmp chgYCrds
     
     RIGHT:
     call mov1rt
     
+    chgYCrds:
+    mov al, dry
+    cmp al, 01h
+    je DOWN
     
+    jmp UP
+    
+    UP:
+    call mov1up
+    jmp rtSprite
+    
+    DOWN:
+    call mov1dn
+       
     rtSprite:
     ret
 endp dvd

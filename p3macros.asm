@@ -7,13 +7,13 @@ mov di, 0 ;Y
         mov si,0
     
     drawlp:
+        cmp si, sz
+        je goDown
         mov ax, si
         add ax, x
         mov bx, di
         add bx, y
         draw clr, ax, bx
-        cmp si, sz
-        je goDown
         inc si
         jmp drawlp
         
