@@ -5,40 +5,53 @@ include p3macros.asm
 
 .data
 ;       0   1   2   3   4   5   6   7
-;ln1 db  00 ,12 ,12 ,12 ,'@'
-;ln2 db  12 ,12 ,11 ,11 ,'@'
-;ln3 db  12 ,12 ,12 ,12 ,'@'
-;ln4 db  12 ,12 ,12 ,12 ,'@'
-;ln5 db  00 ,12 ,00 ,12 ,'@'
+ln1 db  00 ,12 ,12 ,12 ,'@'
+ln2 db  12 ,12 ,11 ,11 ,'@'
+ln3 db  12 ,12 ,12 ,12 ,'@'
+ln4 db  12 ,12 ,12 ,12 ,'@'
+ln5 db  00 ,12 ,00 ,12 ,'@', 'x',' '
 
 ;       0   1   2   3   4   5   6   7
-ln1 db  15 ,15 ,14 ,14 ,14 ,14 ,15 ,15 ,'@' ;@ o 40h es fin de linea
-ln2 db  15 ,14 ,14 ,14 ,14 ,14 ,14 ,15 ,'@'
-ln3 db  14 ,14 ,12 ,14 ,14 ,12 ,14 ,14 ,'@'
-ln4 db  14 ,14 ,14 ,14 ,14 ,14 ,14 ,14 ,'@'
-ln5 db  14 ,14 ,14 ,14 ,14 ,14 ,14 ,14 ,'@'
-ln6 db  14 ,14 ,11 ,14 ,14 ,11 ,14 ,14 ,'@'
-ln7 db  15 ,14 ,14 ,11 ,11 ,14 ,14 ,15 ,'@'
-ln8 db  15 ,15 ,14 ,14 ,14 ,14 ,15 ,15 ,'x',':'
+;ln1 db  15 ,15 ,14 ,14 ,14 ,14 ,15 ,15 ,'@' ;@ o 40h es fin de linea
+;ln2 db  15 ,14 ,14 ,14 ,14 ,14 ,14 ,15 ,'@'
+;ln3 db  14 ,14 ,12 ,14 ,14 ,12 ,14 ,14 ,'@'
+;ln4 db  14 ,14 ,14 ,14 ,14 ,14 ,14 ,14 ,'@'
+;ln5 db  14 ,14 ,14 ,14 ,14 ,14 ,14 ,14 ,'@'
+;ln6 db  14 ,14 ,11 ,14 ,14 ,11 ,14 ,14 ,'@'
+;ln7 db  15 ,14 ,14 ,11 ,11 ,14 ,14 ,15 ,'@'
+;ln8 db  15 ,15 ,14 ,14 ,14 ,14 ,15 ,15 ,'x',' '
 
 ;Punto de referencia donde se pintara el 1er pixel.
 ;Este ira cambiando a la hora de moverse por la pantalla
-crd dw  0000h, 'y:', 0000h, 'i:'    
-its dw  0000h, 'j:', 0000h, 'x:'    ;i y j del ciclo for
+crd dw  0001h, 'y ', 0001h, 'i '    
+its dw  0000h, 'j ', 0000h, 'x '    ;i y j del ciclo for
 
 ;Sirve para indicar las coordendas de 1 pixel, este cambia al ir dibujando la figura.
-pxl dw  0000h, 'y:', 0000h, 'c:'    
+pxl dw  0000h, 'y ', 0000h, 'c '    
 
 ;Variable para guardar el color del pixel, este ira cambiando cuando se dibuje un pixel y siga el siguiente
 clr db  0ch     
 
 ;Variable que funge como indicador del arreglo de colores que es ln
+tx1 dw 'id','x '
 idx dw  0000h
 
+; Variables de direccion del sprite.
+tx2 dw 'x '
+drx db 01h      ; Variable del eje x
+tx3 dw 'y '
+dry db 01h      ; Variable del eje y
 
-w   equ 8 ;WIDTH
-h   equ 8 ;HEIGHT
-px  equ 1            
+
+w       equ 4           ;WIDTH
+h       equ 5           ;HEIGHT
+px      equ 1           ;PIXEL SIZE (TAMAÑO DE CADA CUADRADITO)
+scw     equ 6           ;SCREEN WIDTH
+sch     equ 7           ;SCREEN HEIGHT
+mw      equ scw-w*px    ;LIMITE DE X
+mh      equ sch-h*px    ;LIMITE DE Y
+frzcx   equ 00003h
+frzdx   equ 0d090h
 
 .code
 
@@ -53,17 +66,10 @@ call sprite
 .exit
 
 proc sprite
-    
-    
     ; Piensa que todo esto es un ciclo infinito con
     ; un ciclo for i con un ciclo for j dentro.
     start:
-    ; Interrupcion de espera
-    ; CX:DX = intervalo en microsegundos. 1 sec = 1,000,000 microsec
-    mov ax, 8600h
-    mov cx, 000bh               
-    mov dx, 071b0h
-    int 15h                     
+    ;call waitSc              
     ; Sirve para iniciar y reiniciar.
     mov si, 0                   ; Empezar de 0           
     mov di, 0
@@ -89,12 +95,12 @@ proc sprite
     mov bx, its[4]              ; Obtener valor de j
     
     ; PROCESO:
-    ; 8 * i + x 
+    ; i * 8 + x 
     mul cx                  
     add ax, crd[0]
     mov pxl[0], ax
     
-    ; 8 * j + y 
+    ; j * 8 + y 
     mov ax, bx
     mul cx
     add ax, crd[4]
@@ -126,8 +132,12 @@ proc sprite
     inc di                      ; Siguiente renglon, j++
     mov its[4], di              ; Guarda el valor de j.
     cmp di, h
-    je start                    ; Si j=h reiniciar.
+    je restart                  ; Si j=h reiniciar.
     jmp lp
+    
+    restart:
+    call dvd
+    jmp start
     
     key:
     cmp al, 'w'
@@ -149,31 +159,23 @@ proc sprite
     
     
     goU:
-    mov ax, crd[4]       
-    sub ax, px
-    mov crd[4], ax              ; Offset de 8px hacia arriba
+    call mov1up
     call ClearBuffKB
     jmp lp
     
     
     goD:
-    mov ax, crd[4]
-    add ax, px
-    mov crd[4], ax              ; Offset de 8px hacia abajo
+    call mov1dn
     call ClearBuffKB
     jmp lp
     
     goL:
-    mov ax, crd[0]
-    sub ax, px
-    mov crd[0], ax              ; Offset de 8px hacia la izquierda
+    call mov1lf
     call ClearBuffKB
     jmp lp
     
     goR:
-    mov ax, crd[0]
-    add ax, px
-    mov crd[0], ax              ; Offset de 8px hacia la derecha
+    call mov1rt
     call ClearBuffKB
     jmp lp      
     
@@ -184,6 +186,126 @@ proc sprite
     mov its[4], di   
     ret    
 sprite endp
+
+proc dvd
+    getX: 
+    mov ax, crd[0]          ;X
+    jmp chkX
+    
+    getY:
+    mov ax, crd[4]          ;Y
+    jmp chkY
+    
+    chkX:
+    ;Revisar que x no sobrepase el borde izquierdo      
+    cmp ax, 0
+    jle goToLeft
+    
+    ;Revisar que x no sobrepase el borde derecho
+    ;Proceso: w * px + x
+    mov ax, w
+    mov cx, px
+    mul cx
+    add ax, crd[0]
+    
+    cmp ax, mw
+    jae goToRight
+    jmp getY
+    
+    chkY:
+    ;Revisar que y no sobrepase el borde superior
+    cmp ax, 0
+    jle goToDown
+    
+    
+    ;Revisar que y no sobrepase el borde inferior
+    ;Proceso: h * px + y
+    mov ax, h
+    mov cx, px
+    mul cx
+    add ax, crd[4]
+    cmp ax, mh
+    jae goToUp                                    
+    jmp chgXCrds
+    
+    goToUp:
+    mov dry, 00h
+    jmp getY
+    
+    goToDown:
+    mov dry, 01h
+    jmp getY
+    
+    goToLeft:
+    mov drx, 00h
+    jmp chgXCrds
+    
+    goToRight:
+    mov drx, 01h
+    jmp chgXCrds
+    
+    chgXCrds:
+    mov al, drx
+    cmp al, 01h
+    jmp DOWN 
+    
+    jmp UP
+    
+    UP:
+    call mov1up
+    jmp chgYCrds
+    
+    DOWN:
+    call mov1dn
+ 
+    
+    chgYCrds:
+    mov al, dry
+    cmp al, 01h
+    jmp RIGHT
+    
+    jmp LEFT
+    
+    LEFT:
+    call mov1lf
+    jmp rtSprite
+    
+    RIGHT:
+    call mov1rt
+    
+    
+    rtSprite:
+    ret
+endp dvd
+
+proc mov1up
+    mov ax, crd[4]       
+    sub ax, px
+    mov crd[4], ax              ; Offset de 8px hacia arriba
+    ret
+endp mov1up
+
+proc mov1dn
+    mov ax, crd[4]
+    add ax, px
+    mov crd[4], ax              ; Offset de 8px hacia abajo
+    ret
+endp mov1dn
+
+proc mov1lf
+    mov ax, crd[0]
+    sub ax, px
+    mov crd[0], ax              ; Offset de 8px hacia la izquierda
+    ret
+endp mov1lf
+
+proc mov1rt
+    mov ax, crd[0]
+    add ax, px
+    mov crd[0], ax              ; Offset de 8px hacia la derecha
+    ret
+endp mov1rt
+
 
 proc ClearBuffKB
       push ax                   ; Guarda el valor de AX en la pila.
@@ -198,3 +320,13 @@ proc ClearBuffKB
       pop ax
       ret
 endp ClearBuffKB
+
+proc waitSc
+    ; Interrupcion de espera
+    ; CX:DX = intervalo en microsegundos. 1 sec = 1,000,000 microsec
+    mov ax, 8600h
+    mov cx, frzcx               
+    mov dx, frzdx
+    int 15h       
+    ret
+endp waitSc
