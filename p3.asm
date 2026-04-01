@@ -53,9 +53,17 @@ call sprite
 .exit
 
 proc sprite
+    
+    
     ; Piensa que todo esto es un ciclo infinito con
     ; un ciclo for i con un ciclo for j dentro.
     start:
+    ; Interrupcion de espera
+    ; CX:DX = intervalo en microsegundos. 1 sec = 1,000,000 microsec
+    mov ax, 8600h
+    mov cx, 000bh               
+    mov dx, 071b0h
+    int 15h                     
     ; Sirve para iniciar y reiniciar.
     mov si, 0                   ; Empezar de 0           
     mov di, 0
