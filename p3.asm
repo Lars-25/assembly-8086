@@ -76,14 +76,14 @@ dry db 01h      ; Variable del eje y
 
 w       equ 32                 ;WIDTH
 h       equ 32                 ;HEIGHT
-px      equ 2                 ;PIXEL SIZE (TAMAÑO DE CADA CUADRADITO)
-scw     equ 50                ;SCREEN WIDTH
-sch     equ 60                ;SCREEN HEIGHT
+px      equ 1                 ;PIXEL SIZE (TAMAÑO DE CADA CUADRADITO)
+scw     equ 128                ;SCREEN WIDTH
+sch     equ 100                ;SCREEN HEIGHT
 mw      equ scw-w*px          ;LIMITE DE X
 mh      equ sch-h*px          ;LIMITE DE Y
 ; INTERAVLOS DEL TIEMPO PARA LA ESPERA.
-frzcx   equ 00003h
-frzdx   equ 0d090h
+frzcx   equ 00001h
+frzdx   equ 0ffffh
 
 .code
 
